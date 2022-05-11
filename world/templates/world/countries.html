@@ -1,0 +1,17 @@
+{% extends "world/layout.html" %}
+
+{% block body %}
+    <div style="padding: 10px;">
+        <h2>Countries, territories, islands (total: {{ count }})</h2>
+
+        <ul>
+            {% for country in countries %}
+                <li>
+                    <a href="{% url 'country' country.id %}">
+                        {{ country.country_name }}
+                    </a>
+                </li>
+            {% endfor %}
+        </ul>
+    </div>
+{% endblock %}

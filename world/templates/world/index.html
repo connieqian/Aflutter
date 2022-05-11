@@ -1,0 +1,101 @@
+{% extends "world/layout.html" %}
+{% load static %}
+
+{% block body %}
+    
+    <!-- Add alerts on top for new post submission -->
+    {% if msg == "success" %}
+        <div class="alert alert-success" role="alert" style="text-align: center">
+            Your post was added!
+        </div>
+    {% elif msg == "empty" %}
+        <div class="alert alert-warning" role="alert" style="text-align: center">
+            Your post was either empty or you forgot to select a valid country.
+        </div>
+    {% elif msg == "error" %}
+        <div class="alert alert-warning" role="alert" style="text-align: center">
+            Only 195 characters are allowed.
+        </div>
+    {% endif %}
+
+    <!-- Show all posts with username, post, timestamp, and likes  -->
+    <div style="padding: 10px;">
+        <h3>All Flutters</h3>
+        
+        <!-- If logged in, display new post box; otherwise ask for login -->
+        {% if user.is_authenticated %}
+            <div class="mb-3 border" style="padding: 10px;">
+                <h6>Post a new flutter:</h6>
+                <form action="{% url 'index' %}" method="POST">
+                    <textarea class="form-control" name="post" rows="3" placeholder="Type Here..."></textarea>
+                    <select class="form-select" aria-label="Default select example" name="country_selections">
+                        <option selected>Select a country</option>
+                        {% for country in countries %}
+                            <option>{{ country.country_name }}</option>
+                        {% endfor %}
+                    </select>
+                    <input type="submit" class="btn btn-sm btn-primary" style="margin-top: 10px;" value="Post" />
+                </form>
+            </div>
+        {% else %}
+            <p><a href="{% url 'login' %}">Login</a> to post.</p>
+        {% endif %}
+
+        {% for post in posts %}
+            <div class="mb-3 border" style="padding: 10px;">
+                {% if user.is_authenticated %}
+                <h6></h6><a href="{% url 'profile' post.poster.id %}">{{ post.poster.username }}</a> wrote:</h6>
+                {% else %}
+                <h6>{{ post.poster.username }} wrote:</h6>
+                {% endif %}
+                <p>
+                    <!-- Allows users to edit their own post -->
+                    {% if user.is_authenticated and user == post.poster %}
+                        <span id="edit-post-{{ post.id }}" onclick="edit('{{ post.id }}')" style="color: olivedrab; cursor: pointer; font-size: medium;">Edit</span>
+                        <form id="edit-{{ post.id }}" style="display: none;">
+                            <textarea class="form-control" id="form-{{ post.id }}" rows="3">{{ post.body }}</textarea>
+                            <input type="button" class="btn btn-sm btn-primary" id="save-{{ post.id }}" onclick="update('{{ post.id }}')" style="margin-top: 5px;" value="Save Changes"/>
+                        </form>
+                    {% endif %}
+                    
+                    <!-- Add body, country and timestamp -->
+                    <span id="body-{{ post.id }}" style="font-size: 16px;">{{ post.body }}</span><br/>
+                    <span style="color: gray; font-size: 12px;"><a href="{% url 'country' post.country.id %}">{{ post.country.country_name }}</a> | {{ post.timestamp }}</span><br/>
+                    
+                    <!-- Allows users to see likes and add/remove a like if logged in -->
+                    {% if user.is_authenticated %}
+                        {% if user in post.likes.all %}
+                            <span><i class="fa-solid fa-thumbs-up" style="color:olivedrab; cursor: pointer;" id="like-btn-{{ post.id }}" onclick="like('{{ post.id }}')"></i></span>
+                        {% else %}
+                            <span><i class="fa-solid fa-thumbs-up" style="color:black; cursor: pointer;" id="like-btn-{{ post.id }}" onclick="like('{{ post.id }}')"></i></span>
+                        {% endif %}
+                    {% else %}
+                        <span><i class="fa-solid fa-thumbs-up" style="color:black; cursor: pointer;"></i></span>
+                    {% endif %}
+
+                    <span id="like-count-{{ post.id }}">{{ post.likes.all.count }}</span>
+                </p>
+            </div>
+        {% endfor %}
+    </div>
+
+    <!-- Add pagination -->
+    <nav aria-label="Page navigation">
+        <ul class="pagination justify-content-center">
+            {% if page_obj.has_previous %}
+                <li class="page-item"><a class="page-link" href="?page=1">&laquo;</a></li>
+                <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}">Previous</a></li>
+            {% endif %}
+
+                <li class="page-item disabled">
+                    <a class="page-link" href="#" tabindex="-1" aria-disabled="true">{{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</a>
+                </li>
+            
+            {% if page_obj.has_next %}
+                <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}">Next</a></li>
+                <li class="page-item"><a class="page-link" href="?page={{ page_obj.paginator.num_pages }}">&raquo;</a></li>
+            {% endif %}
+        </ul>
+    </nav>
+{% endblock %}
+

@@ -1,0 +1,11 @@
+body {
+    font-family: 'Courier Prime';
+}
+
+.navbar-brand {
+    padding-left: 15px;
+}
+
+.nav-item {
+    padding-right: 20px;
+}
